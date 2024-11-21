@@ -1,18 +1,19 @@
-
 // Import library yang diperlukan
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Kelas untuk menangani operasi database transaksi keuangan
+ * Kelas TransaksiDAO - Data Access Object untuk Transaksi
+ * Menerapkan konsep Single Responsibility Principle dan Data Access Object Pattern
+ * Bertanggung jawab untuk semua operasi database terkait transaksi
  */
 public class TransaksiDAO {
     // Koneksi database
     private Connection connection;
 
     /**
-     * Konstruktor - Menginisialisasi koneksi database
+     * Konstruktor - Menginisialisasi koneksi database dan memastikan tabel ada
      */
     public TransaksiDAO() {
         connection = KoneksiDatabase.getConnection();
@@ -20,7 +21,8 @@ public class TransaksiDAO {
     }
 
     /**
-     * Membuat tabel transaksi jika belum ada
+     * Membuat tabel transaksi jika belum ada di database
+     * Menerapkan prinsip defensive programming
      */
     private void createTableIfNotExists() {
         try {
@@ -38,7 +40,9 @@ public class TransaksiDAO {
     }
 
     /**
-     * Menambah data transaksi baru ke database
+     * Menyimpan transaksi baru ke database
+     * @param transaksi Objek transaksi yang akan disimpan
+     * @throws SQLException jika terjadi kesalahan database
      */
     public void insert(Transaksi transaksi) throws SQLException {
         String sql = "INSERT INTO transaksi (tanggal, jumlah, kategori, deskripsi) VALUES (?, ?, ?, ?)";

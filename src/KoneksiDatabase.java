@@ -3,12 +3,17 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * Kelas untuk mengelola koneksi ke database SQLite
+ * Kelas KoneksiDatabase - Mengelola koneksi database
+ * Menerapkan konsep Singleton Pattern untuk koneksi database
+ * Memastikan hanya ada satu koneksi database yang aktif
  */
 public class KoneksiDatabase {
     // Variabel koneksi database
     private static Connection conn;
     private static final String DB_URL = "jdbc:sqlite:database/keuangan.db";
+    
+    // Konstruktor private untuk Singleton pattern
+    private KoneksiDatabase() {}
     
     /**
      * Mendapatkan koneksi ke database
@@ -35,7 +40,8 @@ public class KoneksiDatabase {
     }
     
     /**
-     * Menutup koneksi database
+     * Menutup koneksi database dengan aman
+     * Memastikan resource database dibebaskan
      */
     public static void closeConnection() {
         try {

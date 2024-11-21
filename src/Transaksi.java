@@ -2,23 +2,25 @@ import java.util.Date;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Kelas model untuk menyimpan data transaksi keuangan
+ * Kelas Transaksi - Merepresentasikan data transaksi keuangan
+ * Menerapkan konsep encapsulation dengan private fields dan public methods
  */
 public class Transaksi {
+    // Properti private untuk encapsulation
     @SerializedName("id")
-    private int id; // ID unik transaksi
+    private int id;               // ID unik untuk setiap transaksi
     
     @SerializedName("tanggal")
-    private Date tanggal; // Tanggal transaksi
+    private Date tanggal;         // Tanggal dilakukannya transaksi
     
-    @SerializedName("jumlah")
-    private double jumlah; // Jumlah uang
+    @SerializedName("jumlah") 
+    private double jumlah;        // Jumlah uang dalam transaksi
     
     @SerializedName("kategori")
-    private String kategori; // Kategori (Pendapatan/Pengeluaran)
+    private String kategori;      // Kategori transaksi (Pendapatan/Pengeluaran)
     
     @SerializedName("deskripsi")
-    private String deskripsi; // Keterangan transaksi
+    private String deskripsi;     // Keterangan detail transaksi
 
     // Konstruktor kosong
     public Transaksi() {
@@ -32,12 +34,21 @@ public class Transaksi {
         this.deskripsi = deskripsi;
     }
 
-    // Getter dan Setter
+    // Getter dan Setter dengan validasi dan dokumentasi
+    /**
+     * Mendapatkan ID transaksi
+     * @return ID transaksi
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * Mengatur ID transaksi
+     * @param id ID baru untuk transaksi
+     */
     public void setId(int id) {
+        if (id < 0) throw new IllegalArgumentException("ID tidak boleh negatif");
         this.id = id;
     }
 
