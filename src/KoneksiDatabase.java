@@ -1,12 +1,19 @@
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+/**
+ * Kelas untuk mengelola koneksi ke database SQLite
+ */
 public class KoneksiDatabase {
+    // Variabel koneksi database
     private static Connection conn;
     private static final String DB_URL = "jdbc:sqlite:database/keuangan.db";
     
+    /**
+     * Mendapatkan koneksi ke database
+     * @return objek Connection atau null jika gagal
+     */
     public static Connection getConnection() {
         try {
             if (conn == null || conn.isClosed()) {
@@ -27,6 +34,9 @@ public class KoneksiDatabase {
         }
     }
     
+    /**
+     * Menutup koneksi database
+     */
     public static void closeConnection() {
         try {
             if (conn != null && !conn.isClosed()) {

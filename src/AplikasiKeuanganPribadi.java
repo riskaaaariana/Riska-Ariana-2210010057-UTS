@@ -3,22 +3,41 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 
+// Import library yang diperlukan
 import java.sql.SQLException;
 import java.util.List;
 import java.text.NumberFormat;
 import java.util.Locale;
 // import java.util.Date;
 import javax.swing.JOptionPane;
+import javax.swing.JFileChooser;
 import javax.swing.table.DefaultTableModel;
+// Add these imports
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+import java.io.*;
+import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 
 /**
- *
+ * Kelas utama aplikasi keuangan pribadi
+ * 
  * @author Riska
  */
 public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
+    // Objek untuk akses database
     private TransaksiDAO transaksiDAO;
+    // Transaksi yang sedang dipilih
     private Transaksi selectedTransaksi;
+    // Format mata uang Rupiah
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(new Locale("id", "ID"));
+    // Add these fields
+    private final Gson gson = new GsonBuilder()
+        .setDateFormat("yyyy-MM-dd")
+        .setPrettyPrinting()
+        .create();
 
     /**
      * Creates new form AplikasiKeuanganPribadi
@@ -29,6 +48,9 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
         loadData();
     }
 
+    /**
+     * Memuat ulang data tabel
+     */
     private void loadData() {
         try {
             List<Transaksi> list = transaksiDAO.getAll();
@@ -36,11 +58,11 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
             model.setRowCount(0);
 
             for (Transaksi t : list) {
-                model.addRow(new Object[]{
-                    t.getTanggal(),
-                    formatRupiah(t.getJumlah()),  // Format as Rupiah
-                    t.getKategori(),
-                    t.getDeskripsi()
+                model.addRow(new Object[] {
+                        t.getTanggal(),
+                        formatRupiah(t.getJumlah()), // Format as Rupiah
+                        t.getKategori(),
+                        t.getDeskripsi()
                 });
             }
         } catch (SQLException e) {
@@ -48,30 +70,39 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Memformat angka ke format Rupiah
+     */
     private String formatRupiah(double amount) {
         return currencyFormat.format(amount);
     }
-    
+
+    /**
+     * Mengkonversi string Rupiah ke nilai numerik
+     */
     private double parseRupiah(String amount) {
         try {
             // Remove currency symbol, dots, and replace comma with dot
             String cleaned = amount.replace("Rp", "")
-                                 .replace(".", "")
-                                 .replace(",", ".")
-                                 .trim();
+                    .replace(".", "")
+                    .replace(",", ".")
+                    .trim();
             return Double.parseDouble(cleaned);
         } catch (NumberFormatException e) {
             return 0.0;
         }
     }
 
+    /**
+     * Memvalidasi input form
+     */
     private boolean validateInput() {
         // Validate date
         if (jDateChooser1.getDate() == null) {
             JOptionPane.showMessageDialog(this,
-                "Tanggal harus diisi!",
-                "Validasi Error",
-                JOptionPane.WARNING_MESSAGE);
+                    "Tanggal harus diisi!",
+                    "Validasi Error",
+                    JOptionPane.WARNING_MESSAGE);
             jDateChooser1.requestFocus();
             return false;
         }
@@ -80,9 +111,9 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
         String jumlahStr = txtJumlah.getText().trim();
         if (jumlahStr.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                "Jumlah uang harus diisi!",
-                "Validasi Error",
-                JOptionPane.WARNING_MESSAGE);
+                    "Jumlah uang harus diisi!",
+                    "Validasi Error",
+                    JOptionPane.WARNING_MESSAGE);
             txtJumlah.requestFocus();
             return false;
         }
@@ -91,25 +122,25 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
             double jumlah = parseRupiah(jumlahStr);
             if (jumlah <= 0) {
                 JOptionPane.showMessageDialog(this,
-                    "Jumlah uang harus lebih besar dari Rp 0!",
-                    "Validasi Error",
-                    JOptionPane.WARNING_MESSAGE);
+                        "Jumlah uang harus lebih besar dari Rp 0!",
+                        "Validasi Error",
+                        JOptionPane.WARNING_MESSAGE);
                 txtJumlah.requestFocus();
                 return false;
             }
             if (jumlah > 999999999999.99) {
                 JOptionPane.showMessageDialog(this,
-                    "Jumlah uang terlalu besar!\nMaksimal: Rp 999.999.999.999,99",
-                    "Validasi Error",
-                    JOptionPane.WARNING_MESSAGE);
+                        "Jumlah uang terlalu besar!\nMaksimal: Rp 999.999.999.999,99",
+                        "Validasi Error",
+                        JOptionPane.WARNING_MESSAGE);
                 txtJumlah.requestFocus();
                 return false;
             }
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this,
-                "Format jumlah uang tidak valid!\nContoh: Rp 10.000 atau 10000",
-                "Validasi Error",
-                JOptionPane.WARNING_MESSAGE);
+                    "Format jumlah uang tidak valid!\nContoh: Rp 10.000 atau 10000",
+                    "Validasi Error",
+                    JOptionPane.WARNING_MESSAGE);
             txtJumlah.requestFocus();
             return false;
         }
@@ -118,17 +149,17 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
         String deskripsi = jTextArea1.getText().trim();
         if (deskripsi.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                "Deskripsi harus diisi!",
-                "Validasi Error",
-                JOptionPane.WARNING_MESSAGE);
+                    "Deskripsi harus diisi!",
+                    "Validasi Error",
+                    JOptionPane.WARNING_MESSAGE);
             jTextArea1.requestFocus();
             return false;
         }
         if (deskripsi.length() > 255) {
             JOptionPane.showMessageDialog(this,
-                "Deskripsi terlalu panjang!\nMaksimal 255 karakter.",
-                "Validasi Error",
-                JOptionPane.WARNING_MESSAGE);
+                    "Deskripsi terlalu panjang!\nMaksimal 255 karakter.",
+                    "Validasi Error",
+                    JOptionPane.WARNING_MESSAGE);
             jTextArea1.requestFocus();
             return false;
         }
@@ -142,6 +173,7 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
      * regenerated by the Form Editor.
      */
     @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
         java.awt.GridBagConstraints gridBagConstraints;
@@ -351,22 +383,13 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
                 {null, null, null, null},
                 {null, null, null, null},
                 {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
                 {null, null, null, null}
             },
             new String [] {
                 "Tanggal", "Jumlah", "Kategori", "Deskripsi"
             }
         ));
-        jTable1.setPreferredSize(new java.awt.Dimension(60, 80));
+        jTable1.setRowSelectionAllowed(false);
         jTable1.setShowGrid(true);
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -422,119 +445,117 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnTambahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTambahActionPerformed
+    private void btnTambahActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnTambahActionPerformed
         // TODO add your handling code here:
         if (!validateInput()) {
             return;
         }
-        
+
         try {
             Transaksi t = new Transaksi(
-                jDateChooser1.getDate(),
-                parseRupiah(txtJumlah.getText().trim()), // Parse from Rupiah format
-                cbKategori.getSelectedItem().toString(),
-                jTextArea1.getText().trim()
-            );
+                    jDateChooser1.getDate(),
+                    parseRupiah(txtJumlah.getText().trim()), // Parse from Rupiah format
+                    cbKategori.getSelectedItem().toString(),
+                    jTextArea1.getText().trim());
             transaksiDAO.insert(t);
             loadData();
             clearForm();
             JOptionPane.showMessageDialog(this,
-                "Data berhasil ditambahkan!",
-                "Sukses",
-                JOptionPane.INFORMATION_MESSAGE);
+                    "Data berhasil ditambahkan!",
+                    "Sukses",
+                    JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, 
-                "Error menambah data: " + e.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Error menambah data: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
-    }//GEN-LAST:event_btnTambahActionPerformed
+    }// GEN-LAST:event_btnTambahActionPerformed
 
-    private void btnUbahActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUbahActionPerformed
+    private void btnUbahActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnUbahActionPerformed
         // TODO add your handling code here:
         if (selectedTransaksi == null) {
             JOptionPane.showMessageDialog(this,
-                "Pilih data yang akan diubah terlebih dahulu!",
-                "Peringatan",
-                JOptionPane.WARNING_MESSAGE);
+                    "Pilih data yang akan diubah terlebih dahulu!",
+                    "Peringatan",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
-        
+
         if (!validateInput()) {
             return;
         }
-        
+
         try {
             selectedTransaksi.setTanggal(jDateChooser1.getDate());
             selectedTransaksi.setJumlah(parseRupiah(txtJumlah.getText().trim())); // Parse from Rupiah format
             selectedTransaksi.setKategori(cbKategori.getSelectedItem().toString());
             selectedTransaksi.setDeskripsi(jTextArea1.getText().trim());
-            
+
             transaksiDAO.update(selectedTransaksi);
             loadData();
             clearForm();
             JOptionPane.showMessageDialog(this,
-                "Data berhasil diubah!",
-                "Sukses",
-                JOptionPane.INFORMATION_MESSAGE);
+                    "Data berhasil diubah!",
+                    "Sukses",
+                    JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this,
-                "Error mengubah data: " + e.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
+                    "Error mengubah data: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
-    }//GEN-LAST:event_btnUbahActionPerformed
+    }// GEN-LAST:event_btnUbahActionPerformed
 
     private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {
         try {
             if (selectedTransaksi == null) {
                 JOptionPane.showMessageDialog(this,
-                    "Silakan pilih data yang akan dihapus terlebih dahulu!",
-                    "Peringatan",
-                    JOptionPane.WARNING_MESSAGE);
+                        "Silakan pilih data yang akan dihapus terlebih dahulu!",
+                        "Peringatan",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
             int confirm = JOptionPane.showConfirmDialog(this,
-                "Anda yakin ingin menghapus data ini?\n" +
-                "Tanggal: " + selectedTransaksi.getTanggal() + "\n" +
-                "Jumlah: " + selectedTransaksi.getJumlah() + "\n" +
-                "Kategori: " + selectedTransaksi.getKategori() + "\n" +
-                "Deskripsi: " + selectedTransaksi.getDeskripsi(),
-                "Konfirmasi Hapus",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
+                    "Anda yakin ingin menghapus data ini?\n" +
+                            "Tanggal: " + selectedTransaksi.getTanggal() + "\n" +
+                            "Jumlah: " + selectedTransaksi.getJumlah() + "\n" +
+                            "Kategori: " + selectedTransaksi.getKategori() + "\n" +
+                            "Deskripsi: " + selectedTransaksi.getDeskripsi(),
+                    "Konfirmasi Hapus",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
 
             if (confirm == JOptionPane.YES_OPTION) {
                 transaksiDAO.delete(selectedTransaksi.getId());
                 loadData();
                 clearForm();
                 JOptionPane.showMessageDialog(this,
-                    "Data berhasil dihapus!",
-                    "Informasi",
-                    JOptionPane.INFORMATION_MESSAGE);
+                        "Data berhasil dihapus!",
+                        "Informasi",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, 
-                "Error menghapus data: " + e.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Error menghapus data: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
-
 
     private void btnCariActionPerformed(java.awt.event.ActionEvent evt) {
         try {
             String keyword = jTextField3.getText().trim();
             if (keyword.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                    "Petunjuk Pencarian:\n" +
-                    "- Cari berdasarkan deskripsi: masukkan kata kunci (contoh: 'makan')\n" +
-                    "- Cari berdasarkan kategori: ketik 'Pendapatan' atau 'Pengeluaran'\n" +
-                    "- Pencarian tidak case sensitive\n" +
-                    "- Minimal masukkan 1 karakter",
-                    "Informasi Pencarian",
-                    JOptionPane.INFORMATION_MESSAGE);
+                        "Petunjuk Pencarian:\n" +
+                                "- Cari berdasarkan deskripsi: masukkan kata kunci (contoh: 'makan')\n" +
+                                "- Cari berdasarkan kategori: ketik 'Pendapatan' atau 'Pengeluaran'\n" +
+                                "- Pencarian tidak case sensitive\n" +
+                                "- Minimal masukkan 1 karakter",
+                        "Informasi Pencarian",
+                        JOptionPane.INFORMATION_MESSAGE);
                 return;
             }
 
@@ -544,10 +565,10 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
 
             if (list.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                    "Data tidak ditemukan untuk kata kunci: " + keyword + "\n" +
-                    "Menampilkan semua data.",
-                    "Hasil Pencarian",
-                    JOptionPane.INFORMATION_MESSAGE);
+                        "Data tidak ditemukan untuk kata kunci: " + keyword + "\n" +
+                                "Menampilkan semua data.",
+                        "Hasil Pencarian",
+                        JOptionPane.INFORMATION_MESSAGE);
                 loadData(); // Refresh to show all data
                 jTextField3.setText(""); // Clear search field
                 return;
@@ -555,42 +576,38 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
 
             // If results found, display them
             for (Transaksi t : list) {
-                model.addRow(new Object[]{
-                    t.getTanggal(),
-                    t.getJumlah(),
-                    t.getKategori(),
-                    t.getDeskripsi()
+                model.addRow(new Object[] {
+                        t.getTanggal(),
+                        t.getJumlah(),
+                        t.getKategori(),
+                        t.getDeskripsi()
                 });
             }
-            
+
             JOptionPane.showMessageDialog(this,
-                "Ditemukan " + list.size() + " data",
-                "Hasil Pencarian",
-                JOptionPane.INFORMATION_MESSAGE);
-                
+                    "Ditemukan " + list.size() + " data",
+                    "Hasil Pencarian",
+                    JOptionPane.INFORMATION_MESSAGE);
+
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, 
-                "Error searching data: " + e.getMessage(),
-                "Error",
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Error searching data: " + e.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
             loadData(); // Refresh on error too
             jTextField3.setText("");
         }
     }
 
+    private void btnMuatActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnMuatActionPerformed
+        importFromJson();
+    }// GEN-LAST:event_btnMuatActionPerformed
 
+    private void btnSimpanActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_btnSimpanActionPerformed
+        exportToJson();
+    }// GEN-LAST:event_btnSimpanActionPerformed
 
-    private void btnMuatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMuatActionPerformed
-        // TODO add your handling code here:
-        loadData();
-        jTextField3.setText("");
-    }//GEN-LAST:event_btnMuatActionPerformed
-
-    private void btnSimpanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSimpanActionPerformed
-        
-    }//GEN-LAST:event_btnSimpanActionPerformed
-
-    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {// GEN-FIRST:event_jTable1MouseClicked
         try {
             int row = jTable1.getSelectedRow();
             if (row >= 0) {
@@ -607,16 +624,19 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error selecting data: " + e.getMessage());
         }
-    }//GEN-LAST:event_jTable1MouseClicked
+    }// GEN-LAST:event_jTable1MouseClicked
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }// GEN-LAST:event_jButton1ActionPerformed
 
-    private void jTextField3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField3ActionPerformed
+    private void jTextField3ActionPerformed(java.awt.event.ActionEvent evt) {// GEN-FIRST:event_jTextField3ActionPerformed
         // TODO add your handling code here:
-    }//GEN-LAST:event_jTextField3ActionPerformed
+    }// GEN-LAST:event_jTextField3ActionPerformed
 
+    /**
+     * Membersihkan form input
+     */
     private void clearForm() {
         jDateChooser1.setDate(null);
         txtJumlah.setText("");
@@ -630,9 +650,13 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
      */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+        // <editor-fold defaultstate="collapsed" desc=" Look and feel setting code
+        // (optional) ">
+        /*
+         * If Nimbus (introduced in Java SE 6) is not available, stay with the default
+         * look and feel.
+         * For details see
+         * http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html
          */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
@@ -642,15 +666,19 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(AplikasiKeuanganPribadi.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AplikasiKeuanganPribadi.class.getName())
+                    .log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(AplikasiKeuanganPribadi.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AplikasiKeuanganPribadi.class.getName())
+                    .log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(AplikasiKeuanganPribadi.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AplikasiKeuanganPribadi.class.getName())
+                    .log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(AplikasiKeuanganPribadi.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(AplikasiKeuanganPribadi.class.getName())
+                    .log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
+        // </editor-fold>
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
@@ -658,6 +686,87 @@ public class AplikasiKeuanganPribadi extends javax.swing.JFrame {
                 new AplikasiKeuanganPribadi().setVisible(true);
             }
         });
+    }
+
+    // Add these methods
+    private void exportToJson() {
+        try {
+            // Get data from database
+            List<Transaksi> list = transaksiDAO.getAll();
+            
+            // Create database directory if it doesn't exist
+            File dir = new File("database");
+            if (!dir.exists()) dir.mkdir();
+            
+            // Create filename with timestamp
+            String filename = "database/transaksi_" + 
+                            new SimpleDateFormat("yyyyMMdd_HHmmss").format(new java.util.Date()) + 
+                            ".json";
+            
+            // Write JSON to file
+            try (FileWriter writer = new FileWriter(filename)) {
+                gson.toJson(list, writer);
+            }
+            
+            JOptionPane.showMessageDialog(this,
+                "Data berhasil diekspor ke file JSON:\n" + filename,
+                "Ekspor Sukses",
+                JOptionPane.INFORMATION_MESSAGE);
+                
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Error mengekspor data: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void importFromJson() {
+        try {
+            JFileChooser chooser = new JFileChooser("database");
+            chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "JSON files", "json"));
+            
+            if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = chooser.getSelectedFile();
+                
+                // Read JSON file
+                try (FileReader reader = new FileReader(selectedFile)) {
+                    java.lang.reflect.Type listType = new TypeToken<ArrayList<Transaksi>>(){}.getType();
+                    List<Transaksi> importedList = gson.fromJson(reader, listType);
+                    
+                    if (importedList == null || importedList.isEmpty()) {
+                        throw new Exception("File JSON tidak berisi data yang valid");
+                    }
+                    
+                    int successCount = 0;
+                    int totalRecords = importedList.size();
+                    
+                    // Import each transaction
+                    for (Transaksi t : importedList) {
+                        try {
+                            transaksiDAO.insert(t);
+                            successCount++;
+                        } catch (Exception e) {
+                            System.err.println("Error importing record: " + e.getMessage());
+                        }
+                    }
+                    
+                    loadData(); // Refresh table
+                    
+                    JOptionPane.showMessageDialog(this,
+                        String.format("Impor selesai!\nBerhasil: %d dari %d data", 
+                                    successCount, totalRecords),
+                        "Impor Sukses",
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Error mengimpor data: " + e.getMessage(),
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

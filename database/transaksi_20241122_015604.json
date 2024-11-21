@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1,
+    "tanggal": "2024-11-22",
+    "jumlah": 10000.0,
+    "kategori": "Pendapatan",
+    "deskripsi": "Jajan"
+  },
+  {
+    "id": 2,
+    "tanggal": "2024-11-22",
+    "jumlah": 10000.0,
+    "kategori": "Pendapatan",
+    "deskripsi": "Makan Siang"
+  },
+  {
+    "id": 5,
+    "tanggal": "2024-11-08",
+    "jumlah": 120000.0,
+    "kategori": "Pendapatan",
+    "deskripsi": "adwdasd"
+  },
+  {
+    "id": 6,
+    "tanggal": "2024-11-02",
+    "jumlah": 200000.0,
+    "kategori": "Pengeluaran",
+    "deskripsi": "Spa dan Salon"
+  }
+]
